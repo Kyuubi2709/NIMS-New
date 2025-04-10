@@ -30,9 +30,15 @@ spec:
           mountPath: /opt/nim/.cache
         resources:
           limits:
-            nvidia.com/gpu: 1
+            nvidia.com/gpu: "1"        # e.g. "1"
+            cpu: "2"                    # e.g. "2"
+            memory: "3000M"              # e.g. "4000M"
+            ephemeral-storage: "10G"  # Use ephemeral-storage instead of storage, e.g. "10G"
           requests:
-            nvidia.com/gpu: 1
+            nvidia.com/gpu: "1"       # e.g. "1"
+            cpu: "2"                  # e.g. "1"
+            memory: "3000M"            # e.g. "2000M"
+            ephemeral-storage: "10G"  # Use ephemeral-storage instead of storage, e.g. "5G"
       volumes:
       - name: nim-cache
         emptyDir: {}
