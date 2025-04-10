@@ -29,8 +29,8 @@ spec:
         value: "10"  # Storage request remains as Gi (or adjust if needed)
       - name: gpuRequest
         value: "1"  # GPU request
-      - name: deploymentInformation
-        value: "nim-cosmos"  # Must be DNS-1035 compliant (lowercase, alphanumeric and dash)
+      # Node Selector will be dynamically added by FluxEdge
+      # Deployment Information will be dynamically added by FluxEdge
   templates:
   - name: main
     steps:
