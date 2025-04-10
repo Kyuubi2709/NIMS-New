@@ -18,7 +18,7 @@ spec:
       - name: memoryLimit
         value: "4Gi"  # Memory limit
       - name: storageLimit
-        value: "10Gi"  # Storage limit
+        value: "10Gi"  # Storage limit (ephemeral-storage)
       - name: gpuLimit
         value: "1"  # GPU limit
       - name: cpuRequest
@@ -26,9 +26,11 @@ spec:
       - name: memoryRequest
         value: "4Gi"  # Memory request
       - name: storageRequest
-        value: "10Gi"  # Storage request
+        value: "10Gi"  # Storage request (ephemeral-storage)
       - name: gpuRequest
         value: "1"  # GPU request
+      - name: deploymentInformation
+        value: "nim-cosmos"  # Must be DNS-1035 compliant (lowercase, alphanumeric or dash)
   templates:
   - name: main
     steps:
@@ -40,7 +42,6 @@ spec:
                 value: "{{workflow.parameters.repoUrl}}"
               - name: repoBranch
                 value: "{{workflow.parameters.repoBranch}}"
-
       - - name: kustomize-build
           template: kustomize-build
           arguments:
@@ -68,7 +69,6 @@ spec:
             artifacts:
               - name: repo
                 from: "{{steps.clone-repo.outputs.artifacts.repo}}"
-
       - - name: apply-kubectl
           template: apply-kubectl
           arguments:
@@ -84,18 +84,10 @@ spec:
     container:
       image: alpine/git
       command: [sh, -c]
-      args: [
-        "git clone --branch {{inputs.parameters.repoBranch}} {{inputs.parameters.repoUrl}} /workspace && \
-        ls /workspace"
-      ]
-    #   volumeMounts:
-    #     - name: ssh-key
-    #       mountPath: /secret
-    #       readOnly: true
-    # volumes:
-    #   - name: ssh-key
-    #     secret:
-    #       secretName: git-ssh-key
+      args:
+        - |
+          git clone --branch {{inputs.parameters.repoBranch}} {{inputs.parameters.repoUrl}} /workspace &&
+          ls /workspace
     outputs:
       artifacts:
         - name: repo
@@ -123,21 +115,23 @@ spec:
       source: |
         #!/bin/sh
         cd /workspace/overlays/cosmos-predict1-7b-2
-        
-        # Replace placeholders in deployment-patch.yaml with actual values
+
+        # Replace placeholders in manifests with actual values
         sed -i "s/\NODE_SELECTOR/{{inputs.parameters.nodeSelector}}/g" deployment-patch.yaml
         sed -i "s/\DEPLOYMENT_INFORMATION/{{inputs.parameters.deploymentInformation}}/g" deployment-patch.yaml
         sed -i "s/\DEPLOYMENT_INFORMATION/{{inputs.parameters.deploymentInformation}}/g" service-patch.yaml
-        sed -i "s/\DEPLOYMENT_INFORMATION/{{inputs.parameters.deploymentInformation}}/g" kustomization.yaml 
+        sed -i "s/\DEPLOYMENT_INFORMATION/{{inputs.parameters.deploymentInformation}}/g" kustomization.yaml
+
         sed -i "s/\GPU_LIMIT/nvidia.com\/gpu:{{inputs.parameters.gpuLimit}}/g" deployment-patch.yaml
         sed -i "s/\CPU_LIMIT/{{inputs.parameters.cpuLimit}}/g" deployment-patch.yaml
         sed -i "s/\MEMORY_LIMIT/{{inputs.parameters.memoryLimit}}/g" deployment-patch.yaml
         sed -i "s/\STORAGE_LIMIT/{{inputs.parameters.storageLimit}}/g" deployment-patch.yaml
+
         sed -i "s/\GPU_REQUEST/nvidia.com\/gpu:{{inputs.parameters.gpuRequest}}/g" deployment-patch.yaml
         sed -i "s/\CPU_REQUEST/{{inputs.parameters.cpuRequest}}/g" deployment-patch.yaml
         sed -i "s/\MEMORY_REQUEST/{{inputs.parameters.memoryRequest}}/g" deployment-patch.yaml
         sed -i "s/\STORAGE_REQUEST/{{inputs.parameters.storageRequest}}/g" deployment-patch.yaml
-        
+
         # Generate the manifests using kustomize
         kustomize build . -o /workspace/modified
 
