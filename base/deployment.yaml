@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fluxai-cloudflare
+  name: nim-cosmos
   labels:
-    deploymentInformation: fluxai-cloudflare
+    deploymentInformation: nim-cosmos
 spec:
   selector:
     matchLabels:
-      deploymentInformation: fluxai-cloudflare
+      deploymentInformation: nim-cosmos
   template:
     metadata:
       labels:
-        deploymentInformation: fluxai-cloudflare
+        deploymentInformation: nim-cosmos
     spec:
-      hostname: fluxai-cloudflare-pod  # Custom hostname for the pod
+      hostname: nim-cosmos-pod  # Custom hostname for the pod
       dnsPolicy: None
       dnsConfig:
         nameservers:
@@ -21,42 +21,21 @@ spec:
          - 1.1.1.1
       hostNetwork: true  # Use the host's network
       containers:
-      - name: edge-4090-8080
-        image: ghcr.io/huggingface/text-generation-inference:2.2.0
-        args: ["--env"]
+      - name: cosmos-nim
+        image: nvcr.io/nim/nvidia/cosmos-predict1-7b-text2world:latest
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - name: nim-cache
+          mountPath: /opt/nim/.cache
         resources:
-         limits:
-            nvidia.com/gpu: 1 # Allocate 1 GPU
-        env:
-        - name: MODEL_ID
-          value: "TheBloke/CapybaraHermes-2.5-Mistral-7B-AWQ"
-        - name: SHARDED
-          value: "false"
-        - name: LOG_LEVEL
-          value: "INFO"
-        - name: HF_HUB_ENABLE_HF_TRANSFER
-          value: "0"
-        - name: TRUST_REMOTE_CODE
-          value: "true"
-        - name: PORT
-          value: "8080"
-        - name: MAX_TOTAL_TOKENS
-          value: "5000"
-      - name: cloudflared
-        image: cloudflare/cloudflared:latest
-        command:
-        - cloudflared
-        - tunnel
-        - --metrics
-        - 0.0.0.0:2000
-        - run
-        args:
-        - --token
-        - token
-        livenessProbe:
-          httpGet:
-            path: /ready
-            port: 2000
-          failureThreshold: 1
-          initialDelaySeconds: 10
-          periodSeconds: 10
+          limits:
+            nvidia.com/gpu: 1
+          requests:
+            nvidia.com/gpu: 1
+      volumes:
+      - name: nim-cache
+        emptyDir: {}
+      imagePullSecrets:
+      - name: secret-nvidia
+      restartPolicy: Always
