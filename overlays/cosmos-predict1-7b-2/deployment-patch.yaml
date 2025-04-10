@@ -27,13 +27,13 @@ spec:
           limits:
             nvidia.com/gpu: "GPU_LIMIT"        # e.g. "1"
             cpu: "CPU_LIMIT"                    # e.g. "2"
-            memory: "MEMORY_LIMIT"              # e.g. "4Gi"
-            ephemeral-storage: "STORAGE_LIMIT"  # Use ephemeral-storage instead of storage, e.g. "10Gi"
+            memory: "MEMORY_LIMIT"              # e.g. "4000M"
+            ephemeral-storage: "STORAGE_LIMIT"  # Use ephemeral-storage instead of storage, e.g. "10G"
           requests:
             nvidia.com/gpu: "GPU_REQUEST"       # e.g. "1"
             cpu: "CPU_REQUEST"                  # e.g. "1"
-            memory: "MEMORY_REQUEST"            # e.g. "2Gi"
-            ephemeral-storage: "STORAGE_REQUEST"  # Use ephemeral-storage instead of storage, e.g. "5Gi"
+            memory: "MEMORY_REQUEST"            # e.g. "2000M"
+            ephemeral-storage: "STORAGE_REQUEST"  # Use ephemeral-storage instead of storage, e.g. "5G"
       volumes:
       - name: nim-cache
         emptyDir: {}
